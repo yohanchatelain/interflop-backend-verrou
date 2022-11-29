@@ -115,17 +115,17 @@ void INTERFLOP_VERROU_API(configure)(verrou_conf_t conf, void *context) {
   verrou_context_t *ctx = (verrou_context_t *)context;
   ctx->default_rounding_mode = conf.default_rounding_mode;
   ctx->rounding_mode = conf.rounding_mode;
-  ctx->seed = conf.seed;
+  vr_seed = conf.seed;
 
   ROUNDINGMODE = ctx->rounding_mode;
   DEFAULTROUNDINGMODE = ctx->default_rounding_mode;
 
-  if (ctx->seed == (unsigned int)-1) {
+  if (vr_seed == (unsigned int)-1) {
     struct timeval t1;
     interflop_gettimeofday(&t1, NULL);
-    ctx->seed = t1.tv_usec + interflop_gettid();
+    vr_seed = t1.tv_usec + interflop_gettid();
   }
-  verrou_set_seed(ctx->seed);
+  verrou_set_seed(vr_seed);
 }
 
 const char *INTERFLOP_VERROU_API(get_backend_name)() { return "verrou"; }
