@@ -51,6 +51,10 @@ unsigned int vr_seed;
 
 static File *stderr_stream;
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #ifdef PROFILING_EXACT
 unsigned int vr_NumOp;
 unsigned int vr_NumExactOp;
@@ -298,9 +302,15 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
   }
 
 void _verrou_check_stdlib(void) {
-  CHECK_IMPL(strcasecmp);
+  CHECK_IMPL(exit);
+  CHECK_IMPL(fprintf);
   CHECK_IMPL(gettid);
   CHECK_IMPL(gettimeofday);
+  CHECK_IMPL(infHandler);
+  CHECK_IMPL(malloc);
+  CHECK_IMPL(nanHandler);
+  CHECK_IMPL(strcasecmp);
+  CHECK_IMPL(strtol);
 }
 
 void _verrou_alloc_context(void **context) {
@@ -315,6 +325,7 @@ void _verrou_init_context(verrou_context_t *ctx) {
 
 void INTERFLOP_VERROU_API(pre_init)(File *stream, interflop_panic_t panic,
                                     void **context) {
+  stderr_stream = stream;
   interflop_set_handler("panic", (void *)panic);
   _verrou_check_stdlib();
   _verrou_alloc_context(context);
@@ -325,7 +336,6 @@ void INTERFLOP_VERROU_API(pre_init)(File *stream, interflop_panic_t panic,
 static struct argp argp = {options, parse_opt, "", "", NULL, NULL, NULL};
 
 void INTERFLOP_VERROU_API(CLI)(int argc, char **argv, void *context) {
-
   verrou_context_t *ctx = (verrou_context_t *)context;
   if (interflop_argp_parse != NULL) {
     interflop_argp_parse(&argp, argc, argv, 0, 0, ctx);
@@ -343,7 +353,6 @@ void INTERFLOP_VERROU_API(finalize)(void *context) {}
 
 struct interflop_backend_interface_t INTERFLOP_VERROU_API(init)(void *context) {
   verrou_context_t *ctx = (verrou_context_t *)ctx;
-
   struct interflop_backend_interface_t interflop_verrou_backend = {
     interflop_add_float : INTERFLOP_VERROU_API(add_float),
     interflop_sub_float : INTERFLOP_VERROU_API(sub_float),
@@ -365,3 +374,16 @@ struct interflop_backend_interface_t INTERFLOP_VERROU_API(init)(void *context) {
   };
   return interflop_verrou_backend;
 }
+
+struct interflop_backend_interface_t interflop_init(void *context)
+    __attribute__((weak, alias("interflop_verrou_init")));
+
+void interflop_pre_init(File *stream, interflop_panic_t panic, void **context)
+    __attribute__((weak, alias("interflop_verrou_pre_init")));
+
+void interflop_CLI(int argc, char **argv, void *context)
+    __attribute__((weak, alias("interflop_verrou_CLI")));
+
+#if defined(__cplusplus)
+}
+#endif

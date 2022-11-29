@@ -536,7 +536,8 @@ public:
 #endif
 
   static inline RealType applySeq(const PackArgs &p, void *context) {
-    switch (ROUNDINGMODE) {
+    verrou_context_t *ctx = (verrou_context_t *)context;
+    switch (ctx->rounding_mode) {
     case VR_NEAREST:
       return RoundingNearest<OP>::apply(p);
     case VR_UPWARD:

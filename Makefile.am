@@ -1,24 +1,21 @@
 ACLOCAL_AMFLAGS=-I m4
-SUBDIRS=common
 lib_LTLIBRARIES = libinterflop_verrou.la
 
-libinterflop_verrou_la_SOURCES = interflop_verrou.cxx 
-libinterflop_verrou_la_CFLAGS = -fno-stack-protector
-libinterflop_verrou_la_CXXFLAGS = -fno-stack-protector
+libinterflop_verrou_la_SOURCES = interflop_verrou.cxx
+libinterflop_verrou_la_CFLAGS = -fno-stack-protector -fPIC
+libinterflop_verrou_la_CXXFLAGS = -fno-stack-protector -fPIC
 
 libinterflop_verrou_la_CFLAGS +=-DVERROU_DET_HASH=vr_@vg_cv_verrou_det_hash@_hash
 libinterflop_verrou_la_CXXFLAGS +=-DVERROU_DET_HASH=vr_@vg_cv_verrou_det_hash@_hash
 libinterflop_verrou_la_CFLAGS +=-DVERROU_NUM_AVG=@VERROU_NUM_AVG@
 libinterflop_verrou_la_CXXFLAGS +=-DVERROU_NUM_AVG=@VERROU_NUM_AVG@
 
+libinterflop_verrou_la_LIBADD= libinterflop_prng.la
+libinterflop_verrou_la_LDFLAGS = -interflop_prng
 if WALL_CFLAGS
-libinterflop_verrou_la_CFLAGS += -Wall -Wextra -Wno-varargs -g  
+libinterflop_verrou_la_CFLAGS += -Wall -Wextra -Wno-varargs
 endif
-libinterflop_verrou_la_LIBADD = \
-    -linterflop_prng \
-    common/libinterflop_fma.la 
-if INTERFLOP_STDLIB
-libinterflop_verrou_la_LIBADD += libinterflop_stdlib.a 
+if BUILD_INTERFLOP_STDLIB
+libinterflop_verrou_la_LIBADD += @INTERFLOP_STDLIB_PATH@/libinterflop_stdlib.la
 endif
 libinterflop_verrou_la_includedir =$(includedir)/
-

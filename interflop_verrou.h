@@ -38,7 +38,7 @@ extern "C" {
 #endif
 #define INTERFLOP_VERROU_API(FCT) interflop_verrou_##FCT
 
-#include "common/interflop.h"
+#include "interflop-stdlib/interflop.h"
 #include "interflop-stdlib/interflop_stdlib.h"
 
 enum vr_RoundingMode {

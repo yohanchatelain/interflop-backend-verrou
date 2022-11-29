@@ -20,13 +20,7 @@ if test "x$WALL_CFLAGS" = "xyes"; then
    AC_MSG_NOTICE([-Wall is set])
 fi
 
-AC_ARG_ENABLE(interflop-stdlib, AS_HELP_STRING([--with-interflop-stdlib],[Link with interflop stdlib]), [INTERFLOP_STDLIB="yes"])
-AM_CONDITIONAL([INTERFLOP_STDLIB], [test "x$INTERFLOP_STDLIB" = "xyes"])
-if test "x$INTERFLOP_STDLIB" = "xyes"; then
-   AC_DEFINE([INTERFLOP_STDLIB], [],  ["Link with interflop stdlib"])
-   AC_MSG_NOTICE([link with interflop stdlib])
-fi
-
+AX_INTERFLOP_STDLIB()
 
 #--enable-xoshiro
 AC_CACHE_CHECK([verrou xoshiro prng], vg_cv_verrou_xoshiro,
@@ -72,6 +66,5 @@ AC_SUBST(vg_cv_verrou_det_hash)
 
 AC_CONFIG_FILES([
  Makefile
- common/Makefile
 ])
 AC_OUTPUT
