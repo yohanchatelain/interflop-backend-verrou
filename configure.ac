@@ -64,7 +64,5 @@ AS_CASE([$vg_cv_verrou_det_hash],
 
 AC_SUBST(vg_cv_verrou_det_hash)
 
-AC_CONFIG_FILES([
- Makefile
-])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
