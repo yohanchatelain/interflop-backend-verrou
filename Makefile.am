@@ -13,8 +13,8 @@ libinterflop_verrou_la_CXXFLAGS +=-DVERROU_NUM_AVG=@VERROU_NUM_AVG@
 if WALL_CFLAGS
 libinterflop_verrou_la_CFLAGS += -Wall -Wextra -Wno-varargs
 endif
-libinterflop_verrou_la_LIBADD = @INTERFLOP_STDLIB_PATH@/libinterflop_prng.la
+libinterflop_verrou_la_LIBADD = @INTERFLOP_STDLIB_PATH@/lib/libinterflop_prng.la
 if BUILD_INTERFLOP_STDLIB
-libinterflop_verrou_la_LIBADD += @INTERFLOP_STDLIB_PATH@/libinterflop_stdlib.la
+libinterflop_verrou_la_LIBADD += @INTERFLOP_STDLIB_PATH@/lib/libinterflop_stdlib.la
 endif
 libinterflop_verrou_la_includedir =$(includedir)/

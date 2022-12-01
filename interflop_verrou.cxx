@@ -205,14 +205,14 @@ IFV_INLINE void INTERFLOP_VERROU_API(cast_double_to_float)(double a, float *res,
   Op::apply(Op::PackArgs(a), res, context);
 }
 
-IFV_INLINE void INTERFLOP_VERROU_API(madd_double)(double a, double b, double c,
-                                                  double *res, void *context) {
+IFV_INLINE void INTERFLOP_VERROU_API(fma_double)(double a, double b, double c,
+                                                 double *res, void *context) {
   typedef OpWithSelectedRoundingMode<MAddOp<double>> Op;
   Op::apply(Op::PackArgs(a, b, c), res, context);
 }
 
-IFV_INLINE void INTERFLOP_VERROU_API(madd_float)(float a, float b, float c,
-                                                 float *res, void *context) {
+IFV_INLINE void INTERFLOP_VERROU_API(fma_float)(float a, float b, float c,
+                                                float *res, void *context) {
   typedef OpWithSelectedRoundingMode<MAddOp<float>> Op;
   Op::apply(Op::PackArgs(a, b, c), res, context);
 }
@@ -365,8 +365,8 @@ struct interflop_backend_interface_t INTERFLOP_VERROU_API(init)(void *context) {
     interflop_div_double : INTERFLOP_VERROU_API(div_double),
     interflop_cmp_double : NULL,
     interflop_cast_double_to_float : INTERFLOP_VERROU_API(cast_double_to_float),
-    interflop_madd_float : INTERFLOP_VERROU_API(madd_float),
-    interflop_madd_double : INTERFLOP_VERROU_API(madd_double),
+    interflop_fma_float : INTERFLOP_VERROU_API(fma_float),
+    interflop_fma_double : INTERFLOP_VERROU_API(fma_double),
     interflop_enter_function : NULL,
     interflop_exit_function : NULL,
     interflop_user_call : NULL,
