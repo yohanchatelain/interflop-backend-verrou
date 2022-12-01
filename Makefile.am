@@ -14,7 +14,7 @@ if WALL_CFLAGS
 libinterflop_verrou_la_CFLAGS += -Wall -Wextra -Wno-varargs
 endif
 libinterflop_verrou_la_LIBADD = @INTERFLOP_STDLIB_PATH@/lib/libinterflop_prng.la
-if BUILD_INTERFLOP_STDLIB
+if LINK_INTERFLOP_STDLIB
 libinterflop_verrou_la_LIBADD += @INTERFLOP_STDLIB_PATH@/lib/libinterflop_stdlib.la
 endif
 libinterflop_verrou_la_includedir =$(includedir)/
