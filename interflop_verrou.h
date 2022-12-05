@@ -107,9 +107,9 @@ void INTERFLOP_VERROU_API(div_float)(float a, float b, float *res,
 void INTERFLOP_VERROU_API(cast_double_to_float)(double a, float *b,
                                                 void *context);
 
-void INTERFLOP_VERROU_API(madd_double)(double a, double b, double c,
+void INTERFLOP_VERROU_API(fma_double)(double a, double b, double c,
                                        double *res, void *context);
-void INTERFLOP_VERROU_API(madd_float)(float a, float b, float c, float *res,
+void INTERFLOP_VERROU_API(fma_float)(float a, float b, float c, float *res,
                                       void *context);
 
 void INTERFLOP_VERROU_API(finalize)(void *context);
