@@ -18,3 +18,4 @@ if LINK_INTERFLOP_STDLIB
 libinterflop_verrou_la_LIBADD += @INTERFLOP_STDLIB_PATH@/lib/libinterflop_stdlib.la
 endif
 libinterflop_verrou_la_includedir =$(includedir)/
+include_HEADERS = interflop_verrou.h
