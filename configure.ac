@@ -1,4 +1,4 @@
-AC_INIT([interflop-verrou-vprec],[1.0],[interflop.project@gmail.com])
+AC_INIT([interflop-backend-verrou],[1.0],[interflop.project@gmail.com])
 AM_SILENT_RULES([yes])
 AC_CONFIG_AUX_DIR(autoconf)
 AM_INIT_AUTOMAKE([subdir-objects -Wall -Werror foreign])
