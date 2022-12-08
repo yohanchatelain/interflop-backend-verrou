@@ -51,7 +51,6 @@ extern unsigned int vr_NumExactOp;
 #define INC_EXACTOP
 #endif
 
-//#include "vr_fpRepr.hxx"
 #include "vr_isNan.hxx"
 #include "vr_nextUlp.hxx"
 

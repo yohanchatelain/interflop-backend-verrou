@@ -33,7 +33,9 @@
 #pragma once
 
 #include <algorithm>
+#include <type_traits>
 
+#include "interflop-stdlib/fma/interflop_fma.h"
 #include "vr_isNan.hxx"
 
 enum opHash : uint32_t {
@@ -60,6 +62,25 @@ template <> inline uint64_t getTypeHash<double>() {
 }
 
 template <class REALTYPE, int NB> struct vr_packArg;
+
+template <typename REAL>
+REAL __verrou_internal_fma(const REAL &a, const REAL &b, const REAL &c);
+
+template <>
+float __verrou_internal_fma(const float &a, const float &b, const float &c) {
+  return interflop_fma_binary32(a, b, c);
+}
+
+template <>
+double __verrou_internal_fma(const double &a, const double &b,
+                             const double &c) {
+  return interflop_fma_binary64(a, b, c);
+}
+template <>
+__float128 __verrou_internal_fma(const __float128 &a, const __float128 &b,
+                                 const __float128 &c) {
+  return interflop_fma_binary128(a, b, c);
+}
 
 /*
  * takes a real number and returns a uint64_t by reinterpreting its bits, NOT
@@ -288,23 +309,10 @@ public:
   };
 
   static inline RealType error(const PackArgs &p, const RealType &x) {
-    /*Provient de "Accurate Sum and dot product" OGITA RUMP OISHI */
+    /* From "Accurate Sum and dot product" OGITA RUMP OISHI */
     const RealType &a(p.arg1);
     const RealType &b(p.arg2);
-    //    return __builtin_fma(a,b,-x);
-    //    VG_(umsg)("vr_fma \n");
-#ifdef USE_VERROU_FMA
-    RealType c;
-    c = vr_fma(a, b, -x);
-    return c;
-#else
-    RealType a1, a2;
-    RealType b1, b2;
-    MulOp<RealType>::split(a, a1, a2);
-    MulOp<RealType>::split(b, b1, b2);
-
-    return (((a1 * b1 - x) + a1 * b2 + a2 * b1) + a2 * b2);
-#endif
+    return __verrou_internal_fma(a, b, -x);
   };
 
   static inline void split(RealType a, RealType &x, RealType &y) {
@@ -368,20 +376,7 @@ public:
     /*Provient de "Accurate Sum and dot product" OGITA RUMP OISHI */
     const RealType a(p.arg1);
     const RealType b(p.arg2);
-    //    return __builtin_fma(a,b,-x);
-    //    VG_(umsg)("vr_fma \n");
-#ifdef USE_VERROU_FMA
-    RealType c;
-    c = vr_fma(a, b, -x);
-    return c;
-#else
-    RealType a1, a2;
-    RealType b1, b2;
-    MulOp<RealType>::split(a, a1, a2);
-    MulOp<RealType>::split(b, b1, b2);
-
-    return (((a1 * b1 - x) + a1 * b2 + a2 * b1) + a2 * b2);
-#endif
+    return __verrou_internal_fma(a, b, -x);
   };
 
   static inline void split(RealType a, RealType &x, RealType &y) {
@@ -442,27 +437,13 @@ public:
   static inline RealType error(const PackArgs &p, const RealType &c) {
     const RealType &x(p.arg1);
     const RealType &y(p.arg2);
-#ifdef USE_VERROU_FMA
-    const RealType r = -vr_fma(c, y, -x);
-    return r / y;
-#else
-    RealType u, uu;
-    MulOp<RealType>::twoProd(c, y, u, uu);
-    return (x - u - uu) / y;
-#endif
+    return -__verrou_internal_fma(c, y, -x);
   };
 
   static inline RealType sameSignOfError(const PackArgs &p, const RealType &c) {
     const RealType &x(p.arg1);
     const RealType &y(p.arg2);
-#ifdef USE_VERROU_FMA
-    const RealType r = -vr_fma(c, y, -x);
-    return r * y;
-#else
-    RealType u, uu;
-    MulOp<RealType>::twoProd(c, y, u, uu);
-    return (x - u - uu) * y;
-#endif
+    return -__verrou_internal_fma(c, y, -x);
   };
 
   static inline const PackArgs comdetPack(const PackArgs &p) { return p; }
@@ -494,36 +475,20 @@ public:
   static inline RealType error(const PackArgs &p, const RealType &c) {
     const RealType &x(p.arg1);
     const RealType &y(p.arg2);
-#ifdef USE_VERROU_FMA
-    const RealType r = -vr_fma(c, y, -x);
-    return r / y;
-#else
-    RealType u, uu;
-    MulOp<RealType>::twoProd(c, y, u, uu);
-    return (x - u - uu) / y;
-#endif
+    return -__verrou_internal_fma(c, y, -x) / y;
   };
 
   static inline RealType sameSignOfError(const PackArgs &p, const RealType &c) {
     const double x((double)p.arg1);
     const double y((double)p.arg2);
-#ifdef USE_VERROU_FMA
-    const double r = -vr_fma((double)c, y, -x);
-
+    const double r = -__verrou_internal_fma((double)c, y, -x);
     if (r > 0) {
       return p.arg2;
-    }
-    if (r < 0) {
+    } else if (r < 0) {
       return -p.arg2;
+    } else {
+      return 0.0;
     }
-    // if(r==0){
-    return 0.;
-    //}
-#else
-    RealType u, uu;
-    MulOp<RealType>::twoProd(c, y, u, uu);
-    return (x - u - uu) * y;
-#endif
   };
 
   static inline const PackArgs comdetPack(const PackArgs &p) { return p; }
@@ -547,14 +512,10 @@ public:
   }
 
   static RealType inline nearestOp(const PackArgs &p) {
-#ifdef USE_VERROU_FMA
     const RealType &a(p.arg1);
     const RealType &b(p.arg2);
     const RealType &c(p.arg3);
-    return vr_fma(a, b, c);
-#else
-    return 0. / 0.;
-#endif
+    return __verrou_internal_fma(a, b, c);
   };
 
   static inline RealType error(const PackArgs &p, const RealType &z) {

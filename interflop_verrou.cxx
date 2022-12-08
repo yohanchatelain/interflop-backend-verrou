@@ -33,10 +33,9 @@
 #include <argp.h>
 #include <stddef.h>
 
+#include "interflop-stdlib/fma/interflop_fma.h"
 #include "interflop-stdlib/interflop_stdlib.h"
 #include "interflop_verrou.h"
-#include "vr_fma.hxx"
-#include "vr_isNan.hxx"
 #include "vr_nextUlp.hxx"
 #include "vr_rand.h"
 
