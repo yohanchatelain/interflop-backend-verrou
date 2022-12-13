@@ -44,6 +44,8 @@ template <class REALTYPE> inline bool isNan(const REALTYPE &x) {
 }
 
 template <> inline bool isNan<double>(const double &x) {
+  return __builtin_isnan(x);
+
   static const uint64_t maskSpecial = 0x7ff0000000000000;
   static const uint64_t maskInf = 0x000fffffffffffff;
   const uint64_t *X = reinterpret_cast<const uint64_t *>(&x);
@@ -56,6 +58,8 @@ template <> inline bool isNan<double>(const double &x) {
 }
 
 template <> inline bool isNan<float>(const float &x) {
+  return __builtin_isnan(x);
+
   static const uint32_t maskSpecial = 0x7f800000;
   static const uint32_t maskInf = 0x007fffff;
   const uint32_t *X = reinterpret_cast<const uint32_t *>(&x);
@@ -73,12 +77,14 @@ template <class REALTYPE> inline bool isNanInf(const REALTYPE &x) {
 }
 
 template <> inline bool isNanInf<double>(const double &x) {
+  return __builtin_isfinite(x) == 0;
   static const uint64_t mask = 0x7ff0000000000000;
   const uint64_t *X = reinterpret_cast<const uint64_t *>(&x);
   return (*X & mask) == mask;
 }
 
 template <> inline bool isNanInf<float>(const float &x) {
+  return __builtin_isfinite(x) == 0;
   static const uint32_t mask = 0x7f800000;
   const uint32_t *X = reinterpret_cast<const uint32_t *>(&x);
   return (*X & mask) == mask;

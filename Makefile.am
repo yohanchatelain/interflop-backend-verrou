@@ -2,8 +2,9 @@ ACLOCAL_AMFLAGS=-I m4
 lib_LTLIBRARIES = libinterflop_verrou.la
 
 libinterflop_verrou_la_SOURCES = interflop_verrou.cxx
-libinterflop_verrou_la_CFLAGS = -fno-stack-protector -fPIC -Og
-libinterflop_verrou_la_CXXFLAGS = -fno-stack-protector -fPIC -Og
+libinterflop_verrou_la_CFLAGS = -flto -O2 -march=native -fno-stack-protector
+libinterflop_verrou_la_CXXFLAGS = -flto -O2 -march=native -fno-stack-protector 
+libinterflop_verrou_la_LDFLAGS = -flto -O2 -march=native
 
 libinterflop_verrou_la_CFLAGS +=-DVERROU_DET_HASH=vr_@vg_cv_verrou_det_hash@_hash
 libinterflop_verrou_la_CXXFLAGS +=-DVERROU_DET_HASH=vr_@vg_cv_verrou_det_hash@_hash
