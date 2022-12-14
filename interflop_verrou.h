@@ -82,7 +82,8 @@ void verrou_set_random_seed(void);
 
 void verrou_init_profiling_exact(void);
 void verrou_get_profiling_exact(unsigned int *num, unsigned int *numExact);
-
+void INTERFLOP_VERROU_API(user_call)(void *context, interflop_call_id id,
+                                     va_list ap);
 void INTERFLOP_VERROU_API(pre_init)(File *stream, interflop_panic_t panic,
                                     void **context);
 struct interflop_backend_interface_t INTERFLOP_VERROU_API(init)(void *context);
@@ -107,10 +108,10 @@ void INTERFLOP_VERROU_API(div_float)(float a, float b, float *res,
 void INTERFLOP_VERROU_API(cast_double_to_float)(double a, float *b,
                                                 void *context);
 
-void INTERFLOP_VERROU_API(fma_double)(double a, double b, double c,
-                                       double *res, void *context);
-void INTERFLOP_VERROU_API(fma_float)(float a, float b, float c, float *res,
+void INTERFLOP_VERROU_API(fma_double)(double a, double b, double c, double *res,
                                       void *context);
+void INTERFLOP_VERROU_API(fma_float)(float a, float b, float c, float *res,
+                                     void *context);
 
 void INTERFLOP_VERROU_API(finalize)(void *context);
 

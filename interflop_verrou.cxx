@@ -353,6 +353,46 @@ void INTERFLOP_VERROU_API(CLI)(int argc, char **argv, void *context) {
                     verrou_rounding_mode_name(ctx->rounding_mode));
 }
 
+static void _interflop_usercall_inexact(void *context, va_list ap) {
+  verrou_context_t *ctx = (verrou_context_t *)context;
+  typedef std::underlying_type<enum FTYPES>::type ftypes_t;
+  float xf = 0;
+  double xd = 0;
+  ftypes_t ftype;
+  void *value = NULL;
+  ftype = va_arg(ap, ftypes_t);
+  value = va_arg(ap, void *);
+  switch (ftype) {
+  case FFLOAT:
+    xf = *((float *)value);
+    xf = vr_rand_bool(&vr_rand) ? nextAfter<float>(xf) : nextPrev<float>(xf);
+    *((float *)value) = xf;
+    break;
+  case FDOUBLE:
+    xd = *((double *)value);
+    xd = vr_rand_bool(&vr_rand) ? nextAfter<double>(xd) : nextPrev<double>(xd);
+    *((double *)value) = xd;
+    break;
+  default:
+    interflop_fprintf(
+        stderr_stream,
+        "Uknown type passed to _interflop_usercall_inexact function");
+    break;
+  }
+}
+
+void INTERFLOP_VERROU_API(user_call)(void *context, interflop_call_id id,
+                                     va_list ap) {
+  switch (id) {
+  case INTERFLOP_INEXACT_ID:
+    _interflop_usercall_inexact(context, ap);
+    break;
+  default:
+    interflop_fprintf(stderr_stream, "Unknown interflop_call id (=%d)", id);
+    break;
+  }
+}
+
 void INTERFLOP_VERROU_API(finalize)(void *context) {}
 
 struct interflop_backend_interface_t INTERFLOP_VERROU_API(init)(void *context) {

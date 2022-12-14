@@ -22,59 +22,58 @@ template <template <typename> typename RoundingMode> class StaticRounding {
 public:
   static void add_double(double a, double b, double *res, void *context) {
     typedef RoundingMode<AddOp<double>> Op;
-    *res = Op::apply(Op::PackArgs(a, b));
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void add_float(float a, float b, float *res, void *context) {
-    // typedef RoundingMode<AddOp<float>> Op;
-    *res = RoundingMode<AddOp<float>>::apply(
-        RoundingMode<AddOp<float>>::PackArgs(a, b));
+    typedef RoundingMode<AddOp<float>> Op;
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void sub_double(double a, double b, double *res, void *context) {
     typedef RoundingMode<SubOp<double>> Op;
-    *res = Op::apply(Op::PackArgs(a, b));
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void sub_float(float a, float b, float *res, void *context) {
     typedef RoundingMode<SubOp<float>> Op;
-    *res = Op::apply(Op::PackArgs(a, b));
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void mul_double(double a, double b, double *res, void *context) {
     typedef RoundingMode<MulOp<double>> Op;
-    *res = Op::apply(Op::PackArgs(a, b));
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void mul_float(float a, float b, float *res, void *context) {
     typedef RoundingMode<MulOp<float>> Op;
-    *res = Op::apply(Op::PackArgs(a, b));
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void div_double(double a, double b, double *res, void *context) {
     typedef RoundingMode<DivOp<double>> Op;
-    *res = Op::apply(Op::PackArgs(a, b));
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void div_float(float a, float b, float *res, void *context) {
     typedef RoundingMode<DivOp<float>> Op;
-    *res = Op::apply(Op::PackArgs(a, b));
+    *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void cast_double_to_float(double a, float *res, void *context) {
     typedef RoundingMode<CastOp<double, float>> Op;
-    *res = Op::apply(Op::PackArgs(a));
+    *res = Op::apply(typename Op::PackArgs(a));
   }
 
   static void fma_double(double a, double b, double c, double *res,
                          void *context) {
     typedef RoundingMode<MAddOp<double>> Op;
-    *res = Op::apply(Op::PackArgs(a, b, c));
+    *res = Op::apply(typename Op::PackArgs(a, b, c));
   }
 
   static void fma_float(float a, float b, float c, float *res, void *context) {
     typedef RoundingMode<MAddOp<float>> Op;
-    *res = Op::apply(Op::PackArgs(a, b, c));
+    *res = Op::apply(typename Op::PackArgs(a, b, c));
   }
 
   static struct interflop_backend_interface_t get_backend(void) {
@@ -94,7 +93,7 @@ public:
       interflop_fma_double : fma_double,
       interflop_enter_function : NULL,
       interflop_exit_function : NULL,
-      interflop_user_call : NULL,
+      interflop_user_call : INTERFLOP_VERROU_API(user_call),
       interflop_finalize : INTERFLOP_VERROU_API(finalize)
     };
   }
@@ -116,7 +115,7 @@ interflop_backend_interface_t dynamic_backend = {
   interflop_fma_double : INTERFLOP_VERROU_API(fma_double),
   interflop_enter_function : NULL,
   interflop_exit_function : NULL,
-  interflop_user_call : NULL,
+  interflop_user_call : INTERFLOP_VERROU_API(user_call),
   interflop_finalize : INTERFLOP_VERROU_API(finalize)
 };
 

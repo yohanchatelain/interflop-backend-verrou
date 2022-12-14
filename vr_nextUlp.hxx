@@ -79,7 +79,7 @@ template <class REALTYPE> inline REALTYPE nextAfter(REALTYPE a) {
 };
 
 template <class REALTYPE> inline REALTYPE nextPrev(REALTYPE a) {
-  return (a >= 0)   ? nextAwayFromZero(a)
-         : (a != 0) ? nextTowardZero(a)
+  return (a > 0)    ? nextTowardZero(a)
+         : (a != 0) ? nextAwayFromZero(a)
                     : -std::numeric_limits<REALTYPE>::denorm_min();
 };
