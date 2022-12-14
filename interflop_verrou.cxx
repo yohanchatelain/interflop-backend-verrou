@@ -33,12 +33,13 @@
 #include <argp.h>
 #include <stddef.h>
 
+#include "vr_rand.h"
+
 #include "interflop-stdlib/fma/interflop_fma.h"
 #include "interflop-stdlib/interflop_stdlib.h"
 #include "interflop_verrou.h"
+#include "static_backends.hxx"
 #include "vr_nextUlp.hxx"
-#include "vr_rand.h"
-
 #include "vr_op.hxx"
 #include "vr_roundingOp.hxx"
 
@@ -354,169 +355,12 @@ void INTERFLOP_VERROU_API(CLI)(int argc, char **argv, void *context) {
 
 void INTERFLOP_VERROU_API(finalize)(void *context) {}
 
-IFV_INLINE void vr_random_add_double(double a, double b, double *res,
-                                     void *context) {
-  typedef RoundingRandom<AddOp<double>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_add_float(float a, float b, float *res,
-                                    void *context) {
-  typedef RoundingRandom<AddOp<float>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_sub_double(double a, double b, double *res,
-                                     void *context) {
-  typedef RoundingRandom<SubOp<double>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_sub_float(float a, float b, float *res,
-                                    void *context) {
-  typedef RoundingRandom<SubOp<float>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_mul_double(double a, double b, double *res,
-                                     void *context) {
-  typedef RoundingRandom<MulOp<double>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_mul_float(float a, float b, float *res,
-                                    void *context) {
-  typedef RoundingRandom<MulOp<float>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_div_double(double a, double b, double *res,
-                                     void *context) {
-  typedef RoundingRandom<DivOp<double>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_div_float(float a, float b, float *res,
-                                    void *context) {
-  typedef RoundingRandom<DivOp<float>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-IFV_INLINE void vr_random_cast_double_to_float(double a, float *res,
-                                               void *context) {
-  typedef RoundingRandom<CastOp<double, float>> Op;
-  *res = Op::apply(Op::PackArgs(a));
-}
-
-IFV_INLINE void vr_random_fma_double(double a, double b, double c, double *res,
-                                     void *context) {
-  typedef RoundingRandom<MAddOp<double>> Op;
-  *res = Op::apply(Op::PackArgs(a, b, c));
-}
-
-IFV_INLINE void vr_random_fma_float(float a, float b, float c, float *res,
-                                    void *context) {
-  typedef RoundingRandom<MAddOp<float>> Op;
-  *res = Op::apply(Op::PackArgs(a, b, c));
-}
-
-static struct interflop_backend_interface_t
-static_backend(verrou_context_t *ctx) {
-  switch (ctx->rounding_mode) {
-  // case VR_NEAREST:
-  //   return RoundingNearest<OP>::apply(p);
-  // case VR_UPWARD:
-  //   return RoundingUpward<OP>::apply(p);
-  // case VR_DOWNWARD:
-  //   return RoundingDownward<OP>::apply(p);
-  // case VR_ZERO:
-  //   return RoundingZero<OP>::apply(p);
-  case VR_RANDOM:
-    return {
-      interflop_add_float : vr_random_add_float,
-      interflop_sub_float : vr_random_sub_float,
-      interflop_mul_float : vr_random_mul_float,
-      interflop_div_float : vr_random_div_float,
-      interflop_cmp_float : NULL,
-      interflop_add_double : vr_random_add_double,
-      interflop_sub_double : vr_random_sub_double,
-      interflop_mul_double : vr_random_mul_double,
-      interflop_div_double : vr_random_div_double,
-      interflop_cmp_double : NULL,
-      interflop_cast_double_to_float : vr_random_cast_double_to_float,
-      interflop_fma_float : vr_random_fma_float,
-      interflop_fma_double : vr_random_fma_double,
-      interflop_enter_function : NULL,
-      interflop_exit_function : NULL,
-      interflop_user_call : NULL,
-      interflop_finalize : INTERFLOP_VERROU_API(finalize)
-    };
-  // case VR_RANDOM_DET:
-  //   return RoundingRandomDet<OP>::apply(p);
-  // case VR_RANDOM_COMDET:
-  //   return RoundingRandomComDet<OP>::apply(p);
-  // case VR_AVERAGE:
-  //   return RoundingAverage<OP>::apply(p);
-  // case VR_AVERAGE_DET:
-  //   return RoundingAverageDet<OP>::apply(p);
-  // case VR_AVERAGE_COMDET:
-  //   return RoundingAverageComDet<OP>::apply(p);
-  // case VR_FARTHEST:
-  //   return RoundingFarthest<OP>::apply(p);
-  // case VR_FLOAT:
-  //   return RoundingFloat<OP>::apply(p);
-  // case VR_NATIVE:
-  //   return RoundingNearest<OP>::apply(p);
-  // case VR_FTZ:
-  //   interflop_panic("FTZ not implemented in backend_verrou");
-  default:
-    return {
-      interflop_add_float : INTERFLOP_VERROU_API(add_float),
-      interflop_sub_float : INTERFLOP_VERROU_API(sub_float),
-      interflop_mul_float : INTERFLOP_VERROU_API(mul_float),
-      interflop_div_float : INTERFLOP_VERROU_API(div_float),
-      interflop_cmp_float : NULL,
-      interflop_add_double : INTERFLOP_VERROU_API(add_double),
-      interflop_sub_double : INTERFLOP_VERROU_API(sub_double),
-      interflop_mul_double : INTERFLOP_VERROU_API(mul_double),
-      interflop_div_double : INTERFLOP_VERROU_API(div_double),
-      interflop_cmp_double : NULL,
-      interflop_cast_double_to_float :
-          INTERFLOP_VERROU_API(cast_double_to_float),
-      interflop_fma_float : INTERFLOP_VERROU_API(fma_float),
-      interflop_fma_double : INTERFLOP_VERROU_API(fma_double),
-      interflop_enter_function : NULL,
-      interflop_exit_function : NULL,
-      interflop_user_call : NULL,
-      interflop_finalize : INTERFLOP_VERROU_API(finalize)
-    };
-  }
-}
-
 struct interflop_backend_interface_t INTERFLOP_VERROU_API(init)(void *context) {
   verrou_context_t *ctx = (verrou_context_t *)context;
 
   struct interflop_backend_interface_t interflop_verrou_backend =
-      static_backend(ctx);
-  // {
-  //   interflop_add_float : INTERFLOP_VERROU_API(add_float),
-  //   interflop_sub_float : INTERFLOP_VERROU_API(sub_float),
-  //   interflop_mul_float : INTERFLOP_VERROU_API(mul_float),
-  //   interflop_div_float : INTERFLOP_VERROU_API(div_float),
-  //   interflop_cmp_float : NULL,
-  //   interflop_add_double : INTERFLOP_VERROU_API(add_double),
-  //   interflop_sub_double : INTERFLOP_VERROU_API(sub_double),
-  //   interflop_mul_double : INTERFLOP_VERROU_API(mul_double),
-  //   interflop_div_double : INTERFLOP_VERROU_API(div_double),
-  //   interflop_cmp_double : NULL,
-  //   interflop_cast_double_to_float :
-  //   INTERFLOP_VERROU_API(cast_double_to_float), interflop_fma_float :
-  //   INTERFLOP_VERROU_API(fma_float), interflop_fma_double :
-  //   INTERFLOP_VERROU_API(fma_double), interflop_enter_function : NULL,
-  //   interflop_exit_function : NULL,
-  //   interflop_user_call : NULL,
-  //   interflop_finalize : INTERFLOP_VERROU_API(finalize)
-  // };
+      get_static_backend(ctx);
+
   interflop_set_seed(ctx->seed, ctx);
   return interflop_verrou_backend;
 }

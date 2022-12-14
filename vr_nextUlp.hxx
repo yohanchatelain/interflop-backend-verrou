@@ -31,9 +31,6 @@
 */
 
 #pragma once
-//#include <string>
-//#include <sstream>
-//#include <math.h>
 #include <cfloat>
 #include <limits>
 #include <stdint.h>
@@ -78,20 +75,11 @@ template <> inline float nextTowardZero<float>(float a) {
 };
 
 template <class REALTYPE> inline REALTYPE nextAfter(REALTYPE a) {
-  if (a >= 0) {
-    return nextAwayFromZero(a);
-  } else {
-    return nextTowardZero(a);
-  }
+  return (a >= 0) ? nextAwayFromZero(a) : nextTowardZero(a);
 };
 
 template <class REALTYPE> inline REALTYPE nextPrev(REALTYPE a) {
-  if (a == 0) {
-    return -std::numeric_limits<REALTYPE>::denorm_min();
-  }
-  if (a > 0) {
-    return nextTowardZero(a);
-  } else {
-    return nextAwayFromZero(a);
-  }
+  return (a >= 0)   ? nextAwayFromZero(a)
+         : (a != 0) ? nextTowardZero(a)
+                    : -std::numeric_limits<REALTYPE>::denorm_min();
 };

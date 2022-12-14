@@ -39,14 +39,14 @@
 
 typedef struct Vr_Rand_ Vr_Rand;
 struct Vr_Rand_ {
-  uint64_t current_;
-  uint32_t count_;
   tinymt64_t gen_;
 #ifdef USE_XOSHIRO
   xoshiro128_state_t rng128_;
   xoshiro256_state_t rng256_;
 #endif
+  uint64_t current_;
   uint64_t seed_;
+  uint32_t count_;
 };
 
 // extern Vr_Rand vr_rand;
