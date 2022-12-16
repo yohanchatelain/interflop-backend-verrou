@@ -97,6 +97,12 @@ const char *verrou_rounding_mode_name(enum vr_RoundingMode mode) {
     return "AVERAGE_DET";
   case VR_AVERAGE_COMDET:
     return "AVERAGE_COMDET";
+  case VR_PRANDOM:
+    return "PRANDOM";
+  case VR_PRANDOM_DET:
+    return "PRANDOM_DET";
+  case VR_PRANDOM_COMDET:
+    return "PRANDOM_COMDET";
   case VR_FARTHEST:
     return "FARTHEST";
   case VR_FLOAT:
@@ -123,6 +129,15 @@ void interflop_set_seed(u_int64_t seed, void *context) {
   }
   verrou_set_seed(vr_seed);
 }
+
+void verrou_updatep_prandom(void) {
+  const double p = tinymt64_generate_double(&(vr_rand.gen_));
+  vr_rand.p = p;
+}
+
+void verrou_updatep_prandom_double(double p) { vr_rand.p = p; }
+
+double verrou_prandom_pvalue(void) { return vr_rand.p; }
 
 // * C interface
 void INTERFLOP_VERROU_API(configure)(verrou_conf_t conf, void *context) {
@@ -261,6 +276,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
       ctx->rounding_mode = VR_AVERAGE_DET;
     } else if (interflop_strcasecmp("average_comdet", arg) == 0) {
       ctx->rounding_mode = VR_AVERAGE_COMDET;
+    } else if (interflop_strcasecmp("prandom", arg) == 0) {
+      ctx->rounding_mode = VR_PRANDOM;
+    } else if (interflop_strcasecmp("prandom_det", arg) == 0) {
+      ctx->rounding_mode = VR_PRANDOM_DET;
+    } else if (interflop_strcasecmp("prandom_comdet", arg) == 0) {
+      ctx->rounding_mode = VR_PRANDOM_COMDET;
     } else if (interflop_strcasecmp("farthest", arg) == 0) {
       ctx->rounding_mode = VR_FARTHEST;
     } else if (interflop_strcasecmp("float", arg) == 0) {
