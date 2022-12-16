@@ -46,6 +46,7 @@ struct Vr_Rand_ {
 #endif
   uint64_t current_;
   uint64_t seed_;
+  double p;
   uint32_t count_;
 };
 
