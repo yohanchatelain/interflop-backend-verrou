@@ -57,7 +57,7 @@ extern unsigned int vr_NumExactOp;
 #include "interflop-stdlib/interflop_stdlib.h"
 #include "vr_op.hxx"
 
-template <class OP> class RoundingNearest {
+template <class OP, class RAND = void> class RoundingNearest {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -69,7 +69,7 @@ public:
   };
 };
 
-template <class OP> class RoundingFloat {
+template <class OP, class RAND = void> class RoundingFloat {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -81,7 +81,7 @@ public:
   };
 };
 
-template <class OP> class RoundingRandom {
+template <class OP, class RAND> class RoundingRandom {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -96,12 +96,12 @@ public:
 #endif
     OP::check(p, res);
     const RealType signError = OP::sameSignOfError(p, res);
-    
+
     if (signError == 0.) {
       INC_EXACTOP;
       return res;
     } else {
-      const bool doNoChange = vr_rand_bool(&vr_rand);
+      const bool doNoChange = RAND::randBool(&vr_rand, p);
       if (doNoChange) {
         return res;
       } else {
@@ -115,12 +115,7 @@ public:
   };
 };
 
-/*
- * Determinized Random Rounding
- * Ensures that running a computation twice with the same seed will produce the
- * same output
- */
-template <class OP> class RoundingRandomDet {
+template <class OP, class RAND> class RoundingPRandom {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -135,58 +130,38 @@ public:
 #endif
     OP::check(p, res);
     const RealType signError = OP::sameSignOfError(p, res);
+
     if (signError == 0.) {
       INC_EXACTOP;
       return res;
     } else {
-      const bool doNoChange = vr_rand_bool_det<OP>(&vr_rand, p);
-      if (doNoChange) {
+      if (signError > 0) {
+        const bool doNoChange = RAND::randBool(&vr_rand, p);
+        if (doNoChange) {
+          return res;
+        } else {
+          if (res > 0) {
+            return nextAwayFromZero<RealType>(res);
+          } else {
+            return nextTowardZero<RealType>(res);
+          }
+        }
+      }
+      const bool doChange = !RAND::randBool(&vr_rand, p);
+      if (doChange) {
         return res;
       } else {
-        if (signError > 0) {
-          return nextAfter<RealType>(res);
+        if (res < 0) {
+          return nextAwayFromZero<RealType>(res);
         } else {
-          return nextPrev<RealType>(res);
+          return nextTowardZero<RealType>(res);
         }
       }
     }
   };
 };
 
-template <class OP> class RoundingRandomComDet {
-public:
-  typedef typename OP::RealType RealType;
-  typedef typename OP::PackArgs PackArgs;
-
-  static inline RealType apply(const PackArgs &p) {
-    const RealType res = OP::nearestOp(p);
-    INC_OP;
-#ifndef VERROU_IGNORE_NANINF_CHECK
-    if (isNanInf<RealType>(res)) {
-      return res;
-    }
-#endif
-    OP::check(p, res);
-    const RealType signError = OP::sameSignOfError(p, res);
-    if (signError == 0.) {
-      INC_EXACTOP;
-      return res;
-    } else {
-      const bool doNoChange = vr_rand_bool_comdet<OP>(&vr_rand, p);
-      if (doNoChange) {
-        return res;
-      } else {
-        if (signError > 0) {
-          return nextAfter<RealType>(res);
-        } else {
-          return nextPrev<RealType>(res);
-        }
-      }
-    }
-  };
-};
-
-template <class OP> class RoundingAverage {
+template <class OP, class RAND> class RoundingAverage {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -212,7 +187,7 @@ public:
       const RealType u(nextRes - res);
       const int s(1);
       const bool doNotChange =
-          ((vr_rand_ratio<RealType>(&vr_rand) * u) > (s * error));
+          ((RAND::randRatio(&vr_rand, p) * u) > (s * error));
       if (doNotChange) {
         return res;
       } else {
@@ -224,7 +199,7 @@ public:
       const RealType u(res - prevRes);
       const int s(-1);
       const bool doNotChange =
-          ((vr_rand_ratio<RealType>(&vr_rand) * u) > (s * error));
+          ((RAND::randRatio(&vr_rand, p) * u) > (s * error));
       if (doNotChange) {
         return res;
       } else {
@@ -235,105 +210,7 @@ public:
   };
 };
 
-template <class OP> class RoundingAverageDet {
-public:
-  typedef typename OP::RealType RealType;
-  typedef typename OP::PackArgs PackArgs;
-
-  static inline RealType apply(const PackArgs &p) {
-    const RealType res = OP::nearestOp(p);
-
-    INC_OP;
-#ifndef VERROU_IGNORE_NANINF_CHECK
-    if (isNanInf<RealType>(res)) {
-      return res;
-    }
-#endif
-    OP::check(p, res);
-    const RealType error = OP::error(p, res);
-    if (error == 0.) {
-      INC_EXACTOP;
-      return res;
-    }
-
-    if (error > 0) {
-      const RealType nextRes(nextAfter<RealType>(res));
-      const RealType u(nextRes - res);
-      const int s(1);
-      const bool doNotChange =
-          ((vr_rand_ratio_det<OP>(&vr_rand, p) * u) > s * error);
-      if (doNotChange) {
-        return res;
-      } else {
-        return nextRes;
-      }
-    }
-    if (error < 0) {
-      const RealType prevRes(nextPrev<RealType>(res));
-      const RealType u(res - prevRes);
-      const int s(-1);
-      const bool doNotChange =
-          ((vr_rand_ratio_det<OP>(&vr_rand, p) * u) > s * error);
-      if (doNotChange) {
-        return res;
-      } else {
-        return prevRes;
-      }
-    }
-    return res; // Should not occur
-  };
-};
-
-template <class OP> class RoundingAverageComDet {
-public:
-  typedef typename OP::RealType RealType;
-  typedef typename OP::PackArgs PackArgs;
-
-  static inline RealType apply(const PackArgs &p) {
-    const RealType res = OP::nearestOp(p);
-
-    INC_OP;
-#ifndef VERROU_IGNORE_NANINF_CHECK
-    if (isNanInf<RealType>(res)) {
-      return res;
-    }
-#endif
-    OP::check(p, res);
-    const RealType error = OP::error(p, res);
-    if (error == 0.) {
-      INC_EXACTOP;
-      return res;
-    }
-
-    if (error > 0) {
-      const RealType nextRes(nextAfter<RealType>(res));
-      const RealType u(nextRes - res);
-      const int s(1);
-      const bool doNotChange =
-          ((vr_rand_ratio_comdet<OP>(&vr_rand, p) * u) > s * error);
-      if (doNotChange) {
-        return res;
-      } else {
-        return nextRes;
-      }
-    }
-    if (error < 0) {
-      const RealType prevRes(nextPrev<RealType>(res));
-      const RealType u(res - prevRes);
-      const int s(-1);
-      const bool doNotChange =
-          ((vr_rand_ratio_comdet<OP>(&vr_rand, p) * u) > s * error);
-      if (doNotChange) {
-        return res;
-      } else {
-        return prevRes;
-      }
-    }
-    return res; // Should not occur
-  };
-};
-
-template <class OP> class RoundingZero {
+template <class OP, class RAND = void> class RoundingZero {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -374,7 +251,7 @@ public:
   };
 };
 
-template <class OP> class RoundingUpward {
+template <class OP, class RAND = void> class RoundingUpward {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -416,7 +293,7 @@ public:
   };
 };
 
-template <class OP> class RoundingDownward {
+template <class OP, class RAND = void> class RoundingDownward {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -458,7 +335,7 @@ public:
   };
 };
 
-template <class OP> class RoundingFarthest {
+template <class OP, class RAND = void> class RoundingFarthest {
 public:
   typedef typename OP::RealType RealType;
   typedef typename OP::PackArgs PackArgs;
@@ -546,17 +423,23 @@ public:
     case VR_ZERO:
       return RoundingZero<OP>::apply(p);
     case VR_RANDOM:
-      return RoundingRandom<OP>::apply(p);
+      return RoundingRandom<OP, vr_rand_prng<OP>>::apply(p);
     case VR_RANDOM_DET:
-      return RoundingRandomDet<OP>::apply(p);
+      return RoundingRandom<OP, vr_rand_det<OP>>::apply(p);
     case VR_RANDOM_COMDET:
-      return RoundingRandomComDet<OP>::apply(p);
+      return RoundingRandom<OP, vr_rand_comdet<OP>>::apply(p);
     case VR_AVERAGE:
-      return RoundingAverage<OP>::apply(p);
+      return RoundingAverage<OP, vr_rand_prng<OP>>::apply(p);
     case VR_AVERAGE_DET:
-      return RoundingAverageDet<OP>::apply(p);
+      return RoundingAverage<OP, vr_rand_det<OP>>::apply(p);
     case VR_AVERAGE_COMDET:
-      return RoundingAverageComDet<OP>::apply(p);
+      return RoundingAverage<OP, vr_rand_comdet<OP>>::apply(p);
+    case VR_PRANDOM:
+      return RoundingPRandom<OP, vr_rand_p<OP, vr_rand_prng>>::apply(p);
+    case VR_PRANDOM_DET:
+      return RoundingPRandom<OP, vr_rand_p<OP, vr_rand_det>>::apply(p);
+    case VR_PRANDOM_COMDET:
+      return RoundingPRandom<OP, vr_rand_p<OP, vr_rand_comdet>>::apply(p);
     case VR_FARTHEST:
       return RoundingFarthest<OP>::apply(p);
     case VR_FLOAT:

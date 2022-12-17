@@ -69,6 +69,8 @@ inline void vr_rand_setSeed(Vr_Rand *r, int seed) {
   vr_tabulation_hash::genTable((r->gen_));
   //  vr_twisted_tabulation_hash::genTable((r->gen_));
   vr_multiply_shift_hash::genTable((r->gen_));
+  const double p = tinymt64_generate_double(&(r->gen_));
+  r->p = p;
 }
 
 inline uint64_t vr_rand_getSeed(const Vr_Rand *r) { return r->seed_; }
@@ -177,54 +179,77 @@ template <> inline float vr_rand_ratio<float>(Vr_Rand *r) {
 #endif
 }
 
+template <class OP> class vr_rand_prng {
+public:
+  static inline bool randBool(Vr_Rand *r, const typename OP::PackArgs &p) {
+    return vr_rand_bool(r);
+  }
+
+  static inline const typename OP::RealType
+  randRatio(Vr_Rand *r, const typename OP::PackArgs &p) {
+    return vr_rand_ratio<typename OP::RealType>(r);
+  }
+};
+
 /*
  * produces a pseudo random number in a deterministic way
  * the same seed and inputs will always produce the same output
  */
-
-template <class OP>
-inline bool vr_rand_bool_det(const Vr_Rand *r, const typename OP::PackArgs &p) {
-
+template <class OP> class vr_rand_det {
+public:
+  static inline bool randBool(const Vr_Rand *r,
+                              const typename OP::PackArgs &p) {
 #ifdef VERROU_DET_HASH
-  typedef VERROU_DET_HASH hash;
-  return hash::hashBool(r, p, OP::getHash());
+    typedef VERROU_DET_HASH hash;
+    return hash::hashBool(r, p, OP::getHash());
 #else
 #error "VERROU_DET_HASH has to be defined"
 #endif
-}
+  }
 
-template <class OP>
-inline const typename OP::RealType
-vr_rand_ratio_det(const Vr_Rand *r, const typename OP::PackArgs &p) {
+  static inline const typename OP::RealType
+  randRatio(const Vr_Rand *r, const typename OP::PackArgs &p) {
 #ifdef VERROU_DET_HASH
-  typedef VERROU_DET_HASH hash;
-  return hash::hashRatio(r, p, OP::getHash());
+    typedef VERROU_DET_HASH hash;
+    return hash::hashRatio(r, p, OP::getHash());
 #else
 #error "VERROU_DET_HASH has to be defined"
 #endif
-}
+  }
+};
 
-template <class OP>
-inline bool vr_rand_bool_comdet(const Vr_Rand *r,
-                                const typename OP::PackArgs &p) {
+/*
+ * produces a pseudo random number in a deterministic way
+ * the same seed and inputs will always produce the same output
+ * if the opertor is commutative the order is not taken into account
+ */
+template <class OP> class vr_rand_comdet {
+public:
+  static inline bool randBool(const Vr_Rand *r,
+                              const typename OP::PackArgs &p) {
 
 #ifdef VERROU_DET_HASH
-  typedef VERROU_DET_HASH hash;
-  return hash::hashBool(r, OP::comdetPack(p), OP::getComdetHash());
+    typedef VERROU_DET_HASH hash;
+    return hash::hashBool(r, OP::comdetPack(p), OP::getComdetHash());
 #else
 #error "VERROU_DET_HASH has to be defined"
 #endif
-}
+  }
 
-template <class OP>
-inline const typename OP::RealType
-vr_rand_ratio_comdet(const Vr_Rand *r, const typename OP::PackArgs &p) {
+  static inline const typename OP::RealType
+  randRatio(const Vr_Rand *r, const typename OP::PackArgs &p) {
 #ifdef VERROU_DET_HASH
-  typedef VERROU_DET_HASH hash;
-  //  const typename OP::PackArgs;
-  //  sort_pack<typename OP::PackArgs::RealType,OP::PackArgs::nb> st(p);
-  return hash::hashRatio(r, OP::comdetPack(p), OP::getComdetHash());
+    typedef VERROU_DET_HASH hash;
+    return hash::hashRatio(r, OP::comdetPack(p), OP::getComdetHash());
 #else
 #error "VERROU_DET_HASH has to be defined"
 #endif
-}
+  }
+};
+
+template <class OP, template <class> class RAND> class vr_rand_p {
+public:
+  static inline bool randBool(Vr_Rand *r, const typename OP::PackArgs &args) {
+    return RAND<OP>::randRatio(r, args) < (r->p);
+  }
+};

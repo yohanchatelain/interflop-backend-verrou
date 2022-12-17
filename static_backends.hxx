@@ -3,76 +3,78 @@
 #include "vr_op.hxx"
 #include "vr_roundingOp.hxx"
 
-template <template <typename> typename Operation, typename Real,
-          template <typename> typename RoundingMode>
-void binary_op(Real a, Real b, Real *res, void *context) {
-  typedef RoundingMode<Operation<Real>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
+template <typename> class Void {};
 
-template <>
-void binary_op<AddOp, double, RoundingAverage>(double a, double b, double *res,
-                                               void *context) {
-  typedef RoundingAverage<AddOp<double>> Op;
-  *res = Op::apply(Op::PackArgs(a, b));
-}
-
-template <template <typename> typename RoundingMode> class StaticRounding {
+template <template <typename O, typename R> typename RoundingMode,
+          template <typename T> typename RAND = Void>
+class StaticRounding {
+  using AD = AddOp<double>;
+  using AF = AddOp<float>;
+  using SD = SubOp<double>;
+  using SF = SubOp<float>;
+  using MD = MulOp<double>;
+  using MF = MulOp<float>;
+  using DD = DivOp<double>;
+  using DF = DivOp<float>;
+  using CDF = CastOp<double, float>;
+  using FD = MAddOp<double>;
+  using FF = MAddOp<float>;
 
 public:
   static void add_double(double a, double b, double *res, void *context) {
-    typedef RoundingMode<AddOp<double>> Op;
+    // typedef typename RoundingMode<AD, RAND<AD>> Op;
+    using Op = RoundingMode<AD, RAND<AD>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void add_float(float a, float b, float *res, void *context) {
-    typedef RoundingMode<AddOp<float>> Op;
+    using Op = RoundingMode<AF, RAND<AF>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void sub_double(double a, double b, double *res, void *context) {
-    typedef RoundingMode<SubOp<double>> Op;
+    using Op = RoundingMode<SD, RAND<SD>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void sub_float(float a, float b, float *res, void *context) {
-    typedef RoundingMode<SubOp<float>> Op;
+    using Op = RoundingMode<SF, RAND<SF>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void mul_double(double a, double b, double *res, void *context) {
-    typedef RoundingMode<MulOp<double>> Op;
+    using Op = RoundingMode<MD, RAND<MD>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void mul_float(float a, float b, float *res, void *context) {
-    typedef RoundingMode<MulOp<float>> Op;
+    using Op = RoundingMode<MF, RAND<MF>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void div_double(double a, double b, double *res, void *context) {
-    typedef RoundingMode<DivOp<double>> Op;
+    using Op = RoundingMode<DD, RAND<DD>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void div_float(float a, float b, float *res, void *context) {
-    typedef RoundingMode<DivOp<float>> Op;
+    using Op = RoundingMode<DF, RAND<DF>>;
     *res = Op::apply(typename Op::PackArgs(a, b));
   }
 
   static void cast_double_to_float(double a, float *res, void *context) {
-    typedef RoundingMode<CastOp<double, float>> Op;
+    using Op = RoundingMode<CDF, RAND<CDF>>;
     *res = Op::apply(typename Op::PackArgs(a));
   }
 
   static void fma_double(double a, double b, double c, double *res,
                          void *context) {
-    typedef RoundingMode<MAddOp<double>> Op;
+    using Op = RoundingMode<FD, RAND<FD>>;
     *res = Op::apply(typename Op::PackArgs(a, b, c));
   }
 
   static void fma_float(float a, float b, float c, float *res, void *context) {
-    typedef RoundingMode<MAddOp<float>> Op;
+    using Op = RoundingMode<FF, RAND<FF>>;
     *res = Op::apply(typename Op::PackArgs(a, b, c));
   }
 
@@ -132,17 +134,17 @@ get_static_backend(verrou_context_t *ctx) {
   case VR_ZERO:
     return StaticRounding<RoundingZero>::get_backend();
   case VR_RANDOM:
-    return StaticRounding<RoundingRandom>::get_backend();
+    return StaticRounding<RoundingRandom, vr_rand_prng>::get_backend();
   case VR_RANDOM_DET:
-    return StaticRounding<RoundingRandomDet>::get_backend();
+    return StaticRounding<RoundingRandom, vr_rand_det>::get_backend();
   case VR_RANDOM_COMDET:
-    return StaticRounding<RoundingAverageComDet>::get_backend();
+    return StaticRounding<RoundingRandom, vr_rand_comdet>::get_backend();
   case VR_AVERAGE:
-    return StaticRounding<RoundingAverage>::get_backend();
+    return StaticRounding<RoundingAverage, vr_rand_prng>::get_backend();
   case VR_AVERAGE_DET:
-    return StaticRounding<RoundingAverageDet>::get_backend();
+    return StaticRounding<RoundingAverage, vr_rand_det>::get_backend();
   case VR_AVERAGE_COMDET:
-    return StaticRounding<RoundingAverageComDet>::get_backend();
+    return StaticRounding<RoundingAverage, vr_rand_comdet>::get_backend();
   case VR_FARTHEST:
     return StaticRounding<RoundingFarthest>::get_backend();
   case VR_FLOAT:
