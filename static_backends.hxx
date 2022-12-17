@@ -125,7 +125,6 @@ static struct interflop_backend_interface_t
 get_static_backend(verrou_context_t *ctx) {
   switch (ctx->rounding_mode) {
   case VR_NEAREST:
-  case VR_NATIVE:
     return StaticRounding<RoundingNearest>::get_backend();
   case VR_UPWARD:
     return StaticRounding<RoundingUpward>::get_backend();
@@ -145,10 +144,18 @@ get_static_backend(verrou_context_t *ctx) {
     return StaticRounding<RoundingAverage, vr_rand_det>::get_backend();
   case VR_AVERAGE_COMDET:
     return StaticRounding<RoundingAverage, vr_rand_comdet>::get_backend();
+  case VR_PRANDOM:
+    return StaticRounding<RoundingPRandom, vr_rand_prng>::get_backend();
+  case VR_PRANDOM_DET:
+    return StaticRounding<RoundingPRandom, vr_rand_det>::get_backend();
+  case VR_PRANDOM_COMDET:
+    return StaticRounding<RoundingPRandom, vr_rand_comdet>::get_backend();
   case VR_FARTHEST:
     return StaticRounding<RoundingFarthest>::get_backend();
   case VR_FLOAT:
     return StaticRounding<RoundingFloat>::get_backend();
+  case VR_NATIVE:
+    return StaticRounding<RoundingNearest>::get_backend();
   case VR_FTZ:
     interflop_panic("FTZ not implemented in backend_verrou");
   default:
